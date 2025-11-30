@@ -17,6 +17,7 @@ namespace SentimentAnalysis
         private static ITransformer _model;
         private static CalibratedBinaryClassificationMetrics _trainedModelMetrics;
         private static IDataView _testSet;
+        private static IDataView _trainSet;
 
         static string _dataPath = Path.Combine(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\")), "Data", "yelp_labelled.txt");
 
@@ -25,6 +26,7 @@ namespace SentimentAnalysis
         {
             _mlContext = new MLContext();
             TrainTestData splitdataView = LoadData(_mlContext);
+            _trainSet = splitdataView.TrainSet;
             _model = BuildAndTrainModel(_mlContext, splitdataView.TrainSet);
             _testSet = splitdataView.TestSet;
             _trainedModelMetrics = Evaluate(_mlContext, splitdataView.TestSet, _model);
@@ -53,6 +55,16 @@ namespace SentimentAnalysis
         public static IDataView GetTestSet()
         {
             return _testSet;
+        }
+
+        public static IDataView GetTrainSet()
+        {
+            return _trainSet;
+        }
+
+        public static string GetDataPath()
+        {
+            return _dataPath;
         }
 
         static TrainTestData LoadData(MLContext mlContext)
