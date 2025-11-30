@@ -188,5 +188,22 @@ namespace A3_Machine_Learning
 
             outputBox.Text = resultMessage.ToString();
         }
+
+        private void label1_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBoxTrainModel_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxTrainModel.Checked)
+            {
+                trainingTextBox.Enabled = true;
+            }
+            else
+            {
+                trainingTextBox.Enabled = false;
+            }
+        }
     }
 }
