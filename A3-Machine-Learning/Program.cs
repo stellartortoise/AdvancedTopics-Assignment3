@@ -106,5 +106,20 @@ namespace SentimentAnalysis
             var resultPrediction = predictionFunction.Predict(sampleStatement);
             Console.WriteLine($"Text: {sampleStatement.Text} | Prediction: {(Convert.ToBoolean(resultPrediction.Prediction) ? "Positive" : "Negative")} sentiment | Probability: {resultPrediction.Probability} ");
         }
+
+        // THIS IS THE SAVE METHOD, USED IN ANOTHER FILE TO CREATE THE EXTERNAL MODEL ZIP FILE
+        //static void SaveModel(MLContext mlContext, ITransformer model, DataViewSchema schema)
+        //{
+        //    string _modelPath = Path.Combine(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\")), "Models", "SentimentModel.zip");
+        //    // Create Models directory if it doesn't exist
+        //    var modelsDirectory = Path.GetDirectoryName(_modelPath);
+        //    if (!Directory.Exists(modelsDirectory))
+        //    {
+        //        Directory.CreateDirectory(modelsDirectory);
+        //    }
+
+        //    // Save the model
+        //    mlContext.Model.Save(model, schema, _modelPath);
+        //}
     }
 }

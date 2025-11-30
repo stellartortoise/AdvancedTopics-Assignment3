@@ -117,33 +117,43 @@ namespace A3_Machine_Learning
 
         private ITransformer RetrainModel(IDataView originalTrainSet, SentimentData newData)
         {
-            // Load all original training data from file
-            IDataView baseData = mlContext.Data.LoadFromTextFile<SentimentData>(dataPath, hasHeader: false);
-            
-            // Create a list with the new data point plus any previously added data
-            var allNewData = new List<SentimentData>(additionalTrainingData);
-            allNewData.Add(newData);
-            
-            // Convert new data to IDataView
-            IDataView newDataView = mlContext.Data.LoadFromEnumerable(allNewData);
-            
-            // Get the data as enumerables and combine them
-            var originalDataEnumerable = mlContext.Data.CreateEnumerable<SentimentData>(baseData, reuseRowObject: false);
-            var combinedData = originalDataEnumerable.Concat(allNewData).ToList();
-            
-            // Create IDataView from combined data
-            IDataView combinedTrainSet = mlContext.Data.LoadFromEnumerable(combinedData);
-            
-            // Retrain the model
-            var estimator = mlContext.Transforms.Text.FeaturizeText(outputColumnName: "Features", inputColumnName: nameof(SentimentData.Text))
-                .Append(mlContext.BinaryClassification.Trainers.SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features"));
-            
-            var retrainedModel = estimator.Fit(combinedTrainSet);
-            
-            // Update the current training set
-            currentTrainSet = combinedTrainSet;
-            
-            return retrainedModel;
+            try
+            {
+                // Load all original training data from file
+                IDataView baseData = mlContext.Data.LoadFromTextFile<SentimentData>(dataPath, hasHeader: false);
+                
+                // Create a list with the new data point plus any previously added data
+                var allNewData = new List<SentimentData>(additionalTrainingData);
+                allNewData.Add(newData);
+                
+                // Convert new data to IDataView
+                IDataView newDataView = mlContext.Data.LoadFromEnumerable(allNewData);
+                
+                // Get the data as enumerables and combine them
+                var originalDataEnumerable = mlContext.Data.CreateEnumerable<SentimentData>(baseData, reuseRowObject: false);
+                var combinedData = originalDataEnumerable.Concat(allNewData).ToList();
+                
+                // Create IDataView from combined data
+                IDataView combinedTrainSet = mlContext.Data.LoadFromEnumerable(combinedData);
+                
+                // Retrain the model
+                var estimator = mlContext.Transforms.Text.FeaturizeText(outputColumnName: "Features", inputColumnName: nameof(SentimentData.Text))
+                    .Append(mlContext.BinaryClassification.Trainers.SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features"));
+                
+                var retrainedModel = estimator.Fit(combinedTrainSet);
+                
+                // Update the current training set
+                currentTrainSet = combinedTrainSet;
+                
+                return retrainedModel;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retraining model: {ex.Message}");
+                MessageBox.Show($"Error retraining model:\n{ex.Message}", 
+                                "Retraining Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return trainedModel; // Return the original model if retraining fails
+            }
         }
 
         private string CompareMetrics(CalibratedBinaryClassificationMetrics before, CalibratedBinaryClassificationMetrics after)
