@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.ML;
+using Microsoft.ML.Data;
 
 namespace A3_Machine_Learning
 {
@@ -18,6 +19,9 @@ namespace A3_Machine_Learning
         private ITransformer trainedModel;  
         private ITransformer externalModel; 
         private PredictionEngine<SentimentData, SentimentPrediction> predictionEngine;
+        private CalibratedBinaryClassificationMetrics trainedModelMetrics;
+        private CalibratedBinaryClassificationMetrics externalModelMetrics;
+        private IDataView testSet;
 
         public Form1()
         {
@@ -30,6 +34,8 @@ namespace A3_Machine_Learning
             // Get the ML model from Program class (trained model)
             mlContext = SentimentAnalysis.Program.GetMLContext();
             trainedModel = SentimentAnalysis.Program.GetModel();
+            trainedModelMetrics = SentimentAnalysis.Program.GetTrainedModelMetrics();
+            testSet = SentimentAnalysis.Program.GetTestSet();
             
             // Load external model from Models folder
             LoadExternalModel();
@@ -50,6 +56,9 @@ namespace A3_Machine_Learning
                     // Load the model from file
                     externalModel = mlContext.Model.Load(modelPath, out var modelInputSchema);
                     Console.WriteLine("External model loaded successfully from: " + modelPath);
+                    
+                    // Evaluate external model on test set
+                    EvaluateExternalModel();
                 }
                 else
                 {
@@ -63,6 +72,29 @@ namespace A3_Machine_Learning
                 Console.WriteLine($"Error loading external model: {ex.Message}");
                 MessageBox.Show($"Error loading external model:\n{ex.Message}", 
                                 "Model Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void EvaluateExternalModel()
+        {
+            if (externalModel != null && testSet != null)
+            {
+                try
+                {
+                    IDataView predictions = externalModel.Transform(testSet);
+                    externalModelMetrics = mlContext.BinaryClassification.Evaluate(predictions, "Label");
+                    
+                    Console.WriteLine("\nExternal Model Metrics:");
+                    Console.WriteLine($"Accuracy: {externalModelMetrics.Accuracy:P2}");
+                    Console.WriteLine($"AUC: {externalModelMetrics.AreaUnderRocCurve:P2}");
+                    Console.WriteLine($"F1 Score: {externalModelMetrics.F1Score:P2}");
+                    Console.WriteLine($"Precision: {externalModelMetrics.PositivePrecision:P2}");
+                    Console.WriteLine($"Recall: {externalModelMetrics.PositiveRecall:P2}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error evaluating external model: {ex.Message}");
+                }
             }
         }
 
@@ -95,12 +127,14 @@ namespace A3_Machine_Learning
             // Check which radio button is selected and use appropriate model
             ITransformer selectedModel;
             string modelChoice;
+            CalibratedBinaryClassificationMetrics selectedMetrics;
             
             if (radioButton1.Checked)
             {
                 // Use newly trained model
                 selectedModel = trainedModel;
                 modelChoice = "Newly Trained Model";
+                selectedMetrics = trainedModelMetrics;
             }
             else
             {
@@ -113,6 +147,7 @@ namespace A3_Machine_Learning
                 }
                 selectedModel = externalModel;
                 modelChoice = "External Loaded Model";
+                selectedMetrics = externalModelMetrics;
             }
 
             // Recreate prediction engine with selected model
@@ -129,13 +164,29 @@ namespace A3_Machine_Learning
 
             // Display results
             string sentiment = prediction.Prediction ? "Positive" : "Negative";
-            string resultMessage = $"Model: {modelChoice}\n" +
-                                   $"Text: {_userInput}\n\n" +
-                                   $"Sentiment: {sentiment}\n" +
-                                   $"Confidence: {prediction.Probability:P2}\n" +
-                                   $"Score: {prediction.Score:F4}";
+            
+            // Build result message with metrics
+            StringBuilder resultMessage = new StringBuilder();
+            resultMessage.AppendLine($"Model: {modelChoice}");
+            resultMessage.AppendLine($"Text: {_userInput}");
+            resultMessage.AppendLine();
+            resultMessage.AppendLine($"Sentiment: {sentiment}");
+            resultMessage.AppendLine($"Confidence: {prediction.Probability:P2}");
+            resultMessage.AppendLine($"Score: {prediction.Score:F4}");
+            
+            // Add model metrics if available
+            if (selectedMetrics != null)
+            {
+                resultMessage.AppendLine();
+                resultMessage.AppendLine("--- Model Performance Metrics ---");
+                resultMessage.AppendLine($"Accuracy: {selectedMetrics.Accuracy:P2}");
+                resultMessage.AppendLine($"AUC: {selectedMetrics.AreaUnderRocCurve:P2}");
+                resultMessage.AppendLine($"F1 Score: {selectedMetrics.F1Score:P2}");
+                resultMessage.AppendLine($"Precision: {selectedMetrics.PositivePrecision:P2}");
+                resultMessage.AppendLine($"Recall: {selectedMetrics.PositiveRecall:P2}");
+            }
 
-            outputBox.Text = resultMessage;
+            outputBox.Text = resultMessage.ToString();
         }
     }
 }

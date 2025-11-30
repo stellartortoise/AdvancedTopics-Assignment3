@@ -15,6 +15,8 @@ namespace SentimentAnalysis
     {
         private static MLContext _mlContext;
         private static ITransformer _model;
+        private static CalibratedBinaryClassificationMetrics _trainedModelMetrics;
+        private static IDataView _testSet;
 
         static string _dataPath = Path.Combine(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\")), "Data", "yelp_labelled.txt");
 
@@ -24,7 +26,8 @@ namespace SentimentAnalysis
             _mlContext = new MLContext();
             TrainTestData splitdataView = LoadData(_mlContext);
             _model = BuildAndTrainModel(_mlContext, splitdataView.TrainSet);
-            Evaluate(_mlContext, splitdataView.TestSet, _model);
+            _testSet = splitdataView.TestSet;
+            _trainedModelMetrics = Evaluate(_mlContext, splitdataView.TestSet, _model);
             UseModelWithSingleItem(_mlContext, _model);
 
             Application.EnableVisualStyles();
@@ -40,6 +43,16 @@ namespace SentimentAnalysis
         public static ITransformer GetModel()
         {
             return _model;
+        }
+
+        public static CalibratedBinaryClassificationMetrics GetTrainedModelMetrics()
+        {
+            return _trainedModelMetrics;
+        }
+
+        public static IDataView GetTestSet()
+        {
+            return _testSet;
         }
 
         static TrainTestData LoadData(MLContext mlContext)
@@ -59,13 +72,16 @@ namespace SentimentAnalysis
 
         }
 
-        static void Evaluate(MLContext mlContext, IDataView testSet, ITransformer model)
+        static CalibratedBinaryClassificationMetrics Evaluate(MLContext mlContext, IDataView testSet, ITransformer model)
         {
             IDataView predictions = model.Transform(testSet);
             CalibratedBinaryClassificationMetrics metrics = mlContext.BinaryClassification.Evaluate(predictions, "Label");
             Console.WriteLine($"Accuracy: {metrics.Accuracy:P2}");
             Console.WriteLine($"AUC: {metrics.AreaUnderRocCurve:P2}");
             Console.WriteLine($"F1 Score: {metrics.F1Score:P2}");
+            Console.WriteLine($"Precision: {metrics.PositivePrecision:P2}");
+            Console.WriteLine($"Recall: {metrics.PositiveRecall:P2}");
+            return metrics;
         }
 
         static void UseModelWithSingleItem(MLContext mlContext, ITransformer model)
