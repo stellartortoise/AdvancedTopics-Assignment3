@@ -32,6 +32,8 @@
             this.userLabel = new System.Windows.Forms.Label();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.submit = new System.Windows.Forms.Button();
+            this.radioButton1 = new System.Windows.Forms.RadioButton();
+            this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
             // 
             // userInput
@@ -72,11 +74,35 @@
             this.submit.UseVisualStyleBackColor = true;
             this.submit.Click += new System.EventHandler(this.button1_Click);
             // 
+            // radioButton1
+            // 
+            this.radioButton1.AutoSize = true;
+            this.radioButton1.Checked = true;
+            this.radioButton1.Location = new System.Drawing.Point(74, 51);
+            this.radioButton1.Name = "radioButton1";
+            this.radioButton1.Size = new System.Drawing.Size(214, 20);
+            this.radioButton1.TabIndex = 4;
+            this.radioButton1.TabStop = true;
+            this.radioButton1.Text = "Train New Model and Use That";
+            this.radioButton1.UseVisualStyleBackColor = true;
+            // 
+            // radioButton2
+            // 
+            this.radioButton2.AutoSize = true;
+            this.radioButton2.Location = new System.Drawing.Point(74, 72);
+            this.radioButton2.Name = "radioButton2";
+            this.radioButton2.Size = new System.Drawing.Size(200, 20);
+            this.radioButton2.TabIndex = 5;
+            this.radioButton2.Text = "Load Existing External Model";
+            this.radioButton2.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(821, 776);
+            this.Controls.Add(this.radioButton2);
+            this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.submit);
             this.Controls.Add(this.outputBox);
             this.Controls.Add(this.userLabel);
@@ -94,6 +120,8 @@
         private System.Windows.Forms.Label userLabel;
         private System.Windows.Forms.RichTextBox outputBox;
         private System.Windows.Forms.Button submit;
+        private System.Windows.Forms.RadioButton radioButton1;
+        private System.Windows.Forms.RadioButton radioButton2;
     }
 }
 
